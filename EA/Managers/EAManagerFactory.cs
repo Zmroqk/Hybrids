@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTP.Config;
-using TTP.DataTTP;
-using TTP.DataTTP.AdditionalOperations;
-using TTP.DataTTP.Crossovers;
-using TTP.DataTTP.Inititializators;
-using TTP.DataTTP.Mutators;
+using Meta.Config;
+using Meta.DataTTP;
+using Meta.DataTTP.AdditionalOperations;
+using Meta.DataTTP.Crossovers;
+using Meta.DataTTP.Inititializators;
+using Meta.DataTTP.Mutators;
 
-namespace TTP.Managers
+namespace Meta.Managers
 {
     public class EAManagerFactory
     {

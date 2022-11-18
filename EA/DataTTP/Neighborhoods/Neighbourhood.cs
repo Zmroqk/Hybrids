@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TabuSearch.Core;
 
-namespace TTP.DataTTP.Neighborhoods
+namespace Meta.DataTTP.Neighborhoods
 {
     public class Neighbourhood : INeighborhood<Specimen>
     {

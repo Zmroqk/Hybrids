@@ -7,10 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TabuSearch.Core;
-using TTP.DataTTP;
-using TTP.DataTTP.Loggers;
+using Meta.DataTTP;
+using Meta.DataTTP.Loggers;
 
-namespace TTP.Managers
+namespace Meta.Managers
 {
     public class SimulatedAnnealingManager : ISimulatedAnnealing<Specimen>
     {
@@ -42,9 +42,9 @@ namespace TTP.Managers
             this.TargetTemperature = targetTemperature;
         }
 
-        public Specimen RunSimulatedAnnealing()
+        public Specimen RunManager()
         {
-            var current = this.SpecimenFactory.CreateSpecimen();
+            var current = this.GetStartingSpecimen();
             var currentScore = current.Evaluate();
             var currentTemperature = this.StartingTemperature;
             var bestScore = currentScore;
@@ -85,6 +85,16 @@ namespace TTP.Managers
                 this.Logger?.Log(record);
             }
             return best;
+        }
+
+        public virtual Specimen GetStartingSpecimen()
+        {
+            return this.SpecimenFactory.CreateSpecimen();
+        }
+
+        public Specimen RunSimulatedAnnealing()
+        {
+            return this.RunManager();
         }
     }
 }

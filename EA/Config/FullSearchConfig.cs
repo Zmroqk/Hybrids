@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.Config
+namespace Meta.Config
 {
     public class FullSearchConfig : IConfig
     {
@@ -16,5 +16,6 @@ namespace TTP.Config
         public FullSearchTabu? TabuConfig { get; set; }
         public FullSearchSimulatedAnnealing? SimulatedAnnealing { get; set; }
         public FullSearchEvolutionaryAlgorithm? EvolutionaryAlgorithm { get; set; }
+        public FullSearchWavyHybrid? WavyHybrid { get; set; }
     }
 }

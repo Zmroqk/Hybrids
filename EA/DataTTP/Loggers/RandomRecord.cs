@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP.Loggers
+namespace Meta.DataTTP.Loggers
 {
     public class RandomRecord : IRecord
     {

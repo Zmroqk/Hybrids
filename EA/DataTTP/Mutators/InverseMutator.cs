@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EA.Core;
 
-namespace TTP.DataTTP.Mutators
+namespace Meta.DataTTP.Mutators
 {
     public class InverseMutator : IMutator<Specimen>
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.Config
+namespace Meta.Config
 {
     /// <summary>
     /// Specimen initializator methods

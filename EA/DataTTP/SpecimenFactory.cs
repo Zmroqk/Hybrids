@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP
+namespace Meta.DataTTP
 {
     public class SpecimenFactory : ISpecimenFactory<Specimen>
     {

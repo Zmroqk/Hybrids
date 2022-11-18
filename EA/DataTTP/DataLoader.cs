@@ -5,10 +5,36 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP
+namespace Meta.DataTTP
 {
     public class DataLoader : IDataLoader<Data>
     {
+        public static DataLoader Instance { get; } = new DataLoader();
+
+        private Dictionary<string, Data> Cache;
+        public DataLoader()
+        {
+            this.Cache = new Dictionary<string, Data>();
+        }
+
+        public Data GetData(string path)
+        {
+            if (this.Cache.ContainsKey(path))
+            {
+                return this.Cache[path];
+            }
+            else
+            {
+                var data = this.Load(path);
+                if (data == null)
+                {
+                    Environment.Exit(-1);
+                }
+                this.Cache.Add(path, data);
+                return data;
+            }
+        }
+
         public Data? Load(string path)
         {
             string[] lines = File.ReadAllLines(path);

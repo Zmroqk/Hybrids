@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP
+namespace Meta.DataTTP
 {
     public class Specimen : ISpecimen<Specimen>, IEquatable<Specimen>
     {

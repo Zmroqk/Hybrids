@@ -8,10 +8,10 @@ using TabuSearch.Core;
 
 namespace SA.Core
 {
-    public interface ISimulatedAnnealing<TSpecimen> where TSpecimen : ISpecimen<TSpecimen>
+    public interface ISimulatedAnnealing<TSpecimen> :IManager<TSpecimen> where TSpecimen : ISpecimen<TSpecimen>
     {
         INeighborhood<TSpecimen> Neighborhood { get; }
-        ISpecimenFactory<TSpecimen> SpecimenFactory { get; }
+        TSpecimen GetStartingSpecimen();
         TSpecimen RunSimulatedAnnealing();
     }
 }

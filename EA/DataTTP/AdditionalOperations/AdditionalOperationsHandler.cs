@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP.AdditionalOperations
+namespace Meta.DataTTP.AdditionalOperations
 {
     public class AdditionalOperationsHandler : IAdditionalOperations<Specimen>
     {

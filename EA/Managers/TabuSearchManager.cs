@@ -5,15 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTP.DataTTP;
-using TTP.DataTTP.Loggers;
+using Meta.DataTTP;
+using Meta.DataTTP.Loggers;
+using TabuSearch.Core;
 
-namespace TabuSearch.Core
+namespace Meta.Managers
 {
-    public class TabuSearchManager : ITabuSearch<Specimen, TabuRecord>
+    public class TabuSearchManager : ITabuSearch<Specimen>
     {
-        public Data Config { get; set; } 
-
         public ISpecimenFactory<Specimen> SpecimenFactory { get; set; }
 
         public int Iterations { get; set; }
@@ -25,12 +24,11 @@ namespace TabuSearch.Core
         private List<Specimen> Tabu { get; set; }
         private HashSet<Specimen> TabuHash { get; set; }
 
-        public ILogger<TabuRecord> Logger { get; set; }
+        public ILogger<TabuRecord>? Logger { get; set; }
 
-        public TabuSearchManager(Data config
-            , ISpecimenFactory<Specimen> specimenFactory
+        public TabuSearchManager(ISpecimenFactory<Specimen> specimenFactory
             , INeighborhood<Specimen> neighborhood
-            , ILogger<TabuRecord> logger
+            , ILogger<TabuRecord>? logger
             , int iterations
             , int neighborhoodSize
             , int tabuSize
@@ -38,7 +36,6 @@ namespace TabuSearch.Core
         {
             this.SpecimenFactory = specimenFactory;
             this.Neighborhood = neighborhood;
-            this.Config = config;
             this.Logger = logger;
             this.Iterations = iterations;
             this.NeighborhoodSize = neighborhoodSize;
@@ -47,19 +44,19 @@ namespace TabuSearch.Core
             this.TabuHash = new HashSet<Specimen>();
         }
 
-        public Specimen RunTabuSearch()
+        public virtual Specimen RunManager()
         {
-            var specimen = this.SpecimenFactory.CreateSpecimen();
+            var specimen = this.GetStartingSpecimen();
             var bestSpecimen = specimen;
             var bestScore = bestSpecimen.Evaluate();
             var iteration = 0;
-            while(iteration < this.Iterations)
+            while (iteration < this.Iterations)
             {
                 var neighborhoods = this.Neighborhood.FindNeighborhood(specimen, this.NeighborhoodSize);
                 var filteredNeighborhoods = neighborhoods.Where(n => !this.TabuList().Contains(n)).ToList();
                 var bestNeighborhood = filteredNeighborhoods.MaxBy(n => n.Evaluate());
                 var worstNeighborhood = filteredNeighborhoods.MinBy(n => n.Evaluate());
-                if(bestNeighborhood != null)
+                if (bestNeighborhood != null)
                 {
                     var bestNeighborhoodScore = bestNeighborhood.Evaluate();
                     var worstNeighborhoodScore = worstNeighborhood.Evaluate();
@@ -81,7 +78,7 @@ namespace TabuSearch.Core
                     this.Tabu.Add(bestNeighborhood);
                     this.TabuHash.Add(bestNeighborhood);
                 }
-                if(this.Tabu.Count > this.TabuSize)
+                if (this.Tabu.Count > this.TabuSize)
                 {
                     this.TabuHash.Remove(this.Tabu.First());
                     this.Tabu.RemoveAt(0);
@@ -94,6 +91,16 @@ namespace TabuSearch.Core
         public IEnumerable<Specimen> TabuList()
         {
             return this.TabuHash;
+        }
+
+        public virtual Specimen GetStartingSpecimen()
+        {
+            return this.SpecimenFactory.CreateSpecimen();
+        }
+
+        public Specimen RunTabuSearch()
+        {
+            return this.RunManager();
         }
     }
 }

@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTP.DataTTP.Mutators;
+using Meta.DataTTP.Mutators;
 
-namespace TTP.DataTTP.Inititializators
+namespace Meta.DataTTP.Inititializators
 {
     public class GreedySpecimenInitializator : ISpecimenInitializator<Specimen>
     {

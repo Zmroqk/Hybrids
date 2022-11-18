@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TTP.DataTTP.Loggers;
+using Meta.DataTTP.Loggers;
 
-namespace TTP.DataTTP
+namespace Meta.DataTTP
 {
     public class LearningManager : LearningManagerBase<Specimen, Record>
     {

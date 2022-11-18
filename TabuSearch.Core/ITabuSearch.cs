@@ -4,11 +4,10 @@ using Meta.Core;
 
 namespace TabuSearch.Core
 {
-    public interface ITabuSearch<TSpecimen, TRecord> where TSpecimen : ISpecimen<TSpecimen> where TRecord : IRecord
+    public interface ITabuSearch<TSpecimen> : IManager<TSpecimen> where TSpecimen : ISpecimen<TSpecimen>
     {
         INeighborhood<TSpecimen> Neighborhood { get; }
-        ISpecimenFactory<TSpecimen> SpecimenFactory { get; }
-        ILogger<TRecord>? Logger { get; }
+        TSpecimen GetStartingSpecimen();
         TSpecimen RunTabuSearch();
         IEnumerable<TSpecimen> TabuList();
     }

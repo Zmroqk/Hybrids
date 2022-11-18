@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TabuSearch.Core;
 
-namespace TTP.DataTTP.Loggers
+namespace Meta.DataTTP.Loggers
 {
     public class TabuRecord : IRecord
     {

@@ -2,14 +2,15 @@
 using Loggers.CSV;
 using Meta.Core;
 using TabuSearch.Core;
-using TTP;
-using TTP.Config;
-using TTP.DataTTP;
-using TTP.DataTTP.Inititializators;
-using TTP.DataTTP.Loggers;
-using TTP.DataTTP.Mutators;
-using TTP.DataTTP.Neighborhoods;
-using TTP.Managers;
+using Meta;
+using Meta.Config;
+using Meta.DataTTP;
+using Meta.DataTTP.Inititializators;
+using Meta.DataTTP.Loggers;
+using Meta.DataTTP.Mutators;
+using Meta.DataTTP.Neighborhoods;
+using Meta.Managers;
+using System.Threading.Tasks;
 
 Console.WriteLine("Select mode: ");
 Console.WriteLine("0. EA ");
@@ -17,6 +18,7 @@ Console.WriteLine("1. Tabu search ");
 Console.WriteLine("2. Random ");
 Console.WriteLine("3. Simulated Annealing ");
 Console.WriteLine("4. Full search ");
+Console.WriteLine("5. Wavy hybrid ");
 string mode = Console.ReadLine();
 int modeNumber;
 if(!int.TryParse(mode, out modeNumber))
@@ -77,7 +79,7 @@ else if (modeNumber == 1)
         var logger = new CSVLogger<Specimen, TabuRecord>(config.OutputFileName);
         logger.RunLogger();
 
-        var tabuSearch = new TabuSearchManager(data, factory, neighbourhood, logger, config.Iterations, config.NeighborhoodSize, config.TabuSize);
+        var tabuSearch = new TabuSearchManager(factory, neighbourhood, logger, config.Iterations, config.NeighborhoodSize, config.TabuSize);
         Console.WriteLine(config.TestName);
         tabuSearch.RunTabuSearch();
 
@@ -168,5 +170,40 @@ else if(modeNumber == 4)
         manager.Wait();
         manager.Dispose();
     }   
+}
+else if(modeNumber == 5)
+{
+    var loader = new LearningConfigLoader<WavyHybridConfig>();
+    Console.WriteLine("Path to config: ");
+    var path = Console.ReadLine();
+    var configs = loader.Load(string.IsNullOrWhiteSpace(path) ? "WavyHybridConfig.json" : path);
+    var factory = new WavyHybridManagerFactory();
+    foreach(var config in configs)
+    {
+        Parallel.For(0, config.RunCount, (i, state) =>
+        {
+            CSVLogger<Specimen, WavyHybridRecord>? logger = null;
+            string path;
+            if (config.UseLogging)
+            {
+                path = string.Format(config.LoggingPathTemplate, i);
+                logger = new CSVLogger<Specimen, WavyHybridRecord>(path);
+            }
+            //local function
+            void Manager_RecordCreated(object sender, WavyHybridRecord e)
+            {
+                logger?.Log(e);
+            }
+            //
+            logger?.RunLogger();
+            var manager = factory.Create(config);
+            manager.RecordCreated += Manager_RecordCreated;
+            var specimen = manager.RunManager();
+
+            logger?.Wait();
+            logger?.Dispose();
+            manager.RecordCreated -= Manager_RecordCreated;
+        });
+    }
 }
 

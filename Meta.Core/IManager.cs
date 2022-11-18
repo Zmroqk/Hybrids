@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 
 namespace Meta.Core
 {
-    public enum MetaheuristicType
+    public interface IManager<TSpecimen> where TSpecimen : ISpecimen<TSpecimen>
     {
-        EvolutionaryAlgorithm = 1,
-        TabuSearch = 2,
-        SimulatedAnnealing = 3,
-        WavyHybrid = 4,
+        public TSpecimen RunManager();
     }
 }

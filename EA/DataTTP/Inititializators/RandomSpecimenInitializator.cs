@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP.Inititializators
+namespace Meta.DataTTP.Inititializators
 {
     public class RandomSpecimenInitializator : ISpecimenInitializator<Specimen>
     {

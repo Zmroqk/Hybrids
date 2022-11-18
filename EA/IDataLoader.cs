@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP
+namespace Meta
 {
     public interface IDataLoader<T> where T : class
     {

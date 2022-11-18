@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.Config
+namespace Meta.Config
 {
     public class LearningConfigLoader<TConfig> where TConfig : IConfig
     {

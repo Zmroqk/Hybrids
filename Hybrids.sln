@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TTP", "EA\TTP.csproj", "{3481C93F-6F87-4FED-8E5D-3B52E0531E4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meta", "EA\Meta.csproj", "{3481C93F-6F87-4FED-8E5D-3B52E0531E4A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EA.Core", "EA.Core\EA.Core.csproj", "{6C0253AB-A79A-4DF4-A5A4-86CFDC92E9E3}"
 EndProject
@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Loggers", "Loggers\Loggers.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meta.Core", "Meta.Core\Meta.Core.csproj", "{73EAC5CC-EB68-4438-A168-769C440B0F34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SA.Core", "SA.Core\SA.Core.csproj", "{C90D57C7-1779-427A-BB7D-96A985592036}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SA.Core", "SA.Core\SA.Core.csproj", "{C90D57C7-1779-427A-BB7D-96A985592036}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

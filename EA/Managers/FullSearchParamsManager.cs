@@ -3,22 +3,17 @@ using EA.Core.Selectors;
 using Loggers;
 using Loggers.CSV;
 using Meta.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TabuSearch.Core;
-using TTP.Config;
-using TTP.DataTTP;
-using TTP.DataTTP.AdditionalOperations;
-using TTP.DataTTP.Crossovers;
-using TTP.DataTTP.Inititializators;
-using TTP.DataTTP.Loggers;
-using TTP.DataTTP.Mutators;
-using TTP.DataTTP.Neighborhoods;
+using Meta.Config;
+using Meta.DataTTP;
+using Meta.DataTTP.AdditionalOperations;
+using Meta.DataTTP.Crossovers;
+using Meta.DataTTP.Inititializators;
+using Meta.DataTTP.Loggers;
+using Meta.DataTTP.Mutators;
+using Meta.DataTTP.Neighborhoods;
+using System.Reflection.Metadata.Ecma335;
 
-namespace TTP.Managers
+namespace Meta.Managers
 {
     public class FullSearchParamsManager : IDisposable
     {
@@ -32,6 +27,8 @@ namespace TTP.Managers
         private IEnumerator<IConfig> Configs;
         private int rowsLogged;
         private int fileIndex;
+        private int additionalLoggingFileIndex;
+        private object additionalLoggingLock;
         private Dictionary<string, Data> LoadedData { get; set; }
         public FullSearchParamsManager(FullSearchConfig config, int maxThreads)
         {
@@ -40,6 +37,8 @@ namespace TTP.Managers
             this.currentTasks = new List<(Task<List<Specimen>>, IConfig)>();
             this.rowsLogged = 0;
             this.fileIndex = 0;
+            this.additionalLoggingFileIndex = 0;
+            this.additionalLoggingLock = new object();
             this.LoadedData = new Dictionary<string, Data>();
         }
 
@@ -123,7 +122,7 @@ namespace TTP.Managers
                         MutationProbability = learningConfig.Mutator.MutateRatio,
                         SpecimenCount = learningConfig.Selector.SpecimenCount,
                         CrossoverType = learningConfig.Crossover.Type.ToString(),
-                        MutatorType = learningConfig.Mutator.Type.ToString(),
+                        MutatorTypeEA = learningConfig.Mutator.Type.ToString(),
                         SelectorType = learningConfig.Selector.Type.ToString(),
                         Epochs = learningConfig.Epochs,
                         Metaheuristic = "EvolutionaryAlgorithm",
@@ -146,8 +145,8 @@ namespace TTP.Managers
                         Iterations = tabuConfig.Iterations,
                         GreeedyKnapsack = tabuConfig.GreedyKnapsackMutator,
                         TabuSize = tabuConfig.TabuSize,
-                        MutatorType = tabuConfig.Mutator.ToString(),
-                        NeighborSize = tabuConfig.NeighborhoodSize,   
+                        MutatorTypeTS = tabuConfig.Mutator.ToString(),
+                        NeighborSizeTS = tabuConfig.NeighborhoodSize,   
                         Metaheuristic = "Tabu",
                         FileName = tabuConfig.InputFileName,
                     };
@@ -166,8 +165,8 @@ namespace TTP.Managers
                         StandardError = this.CalculateStandardError(results),
                         Iterations = simulatedAnnealingConfig.Iterations,
                         GreeedyKnapsack = simulatedAnnealingConfig.GreedyKnapsackMutator,
-                        MutatorType = simulatedAnnealingConfig.Mutator.ToString(),
-                        NeighborSize = simulatedAnnealingConfig.NeighborhoodSize,
+                        MutatorTypeSA = simulatedAnnealingConfig.Mutator.ToString(),
+                        NeighborSizeSA = simulatedAnnealingConfig.NeighborhoodSize,
                         StartingTemperature = simulatedAnnealingConfig.StartingTemperature,
                         TargetTemperature = simulatedAnnealingConfig.TargetTemperature,
                         AnnealingRate = simulatedAnnealingConfig.AnnealingRate,
@@ -175,9 +174,39 @@ namespace TTP.Managers
                         FileName = simulatedAnnealingConfig.InputFileName,
                     };
                     break;
+                case WavyHybridConfig:
+                    var wavyHybridConfig = (WavyHybridConfig)config;
+                    if(this.logger == null || this.rowsLogged == 1000000)
+                    {
+                        this.RecreateLogger(wavyHybridConfig.OutputFileName);
+                    }
+                    record = new FullSearchRecord()
+                    {
+                        BestScore = results.Max(x => x.Evaluate()),
+                        WorstScore = results.Min(x => x.Evaluate()),
+                        AverageScore = results.Average(x => x.Evaluate()),
+                        StandardError = this.CalculateStandardError(results),
+                        Iterations = wavyHybridConfig.Iterations,
+                        MutatorTypeSA = wavyHybridConfig.MutatorSA.ToString(),
+                        MutatorTypeTS = wavyHybridConfig.MutatorTS.ToString(),
+                        NeighborSizeSA = wavyHybridConfig.NeighbourhoodSizeSA,
+                        NeighborSizeTS = wavyHybridConfig.NeighbourhoodSizeTS,
+                        AnnealingRate = wavyHybridConfig.AnnealingRate,
+                        FileName = wavyHybridConfig.InputFileName,
+                        GreeedyKnapsack = wavyHybridConfig.UseGreedyKnapsack,
+                        Metaheuristic = "WavyHybrid",
+                        InitializatorType = wavyHybridConfig.SpecimenInitializator.Type.ToString(),
+                        StartingTemperature = wavyHybridConfig.StartingTemperature,
+                        StartingTemperatureChangeWavyHybrid = wavyHybridConfig.StartingTemperatureChange,
+                        TabuSize = wavyHybridConfig.TabuSize,
+                        TargetTemperature = wavyHybridConfig.TargetTemperature,
+                        StartingMetaheuristics = wavyHybridConfig.StartingMetaheuristic.ToString(),
+                    };
+                    break;
                 default:
                     return;
             }
+
             this.rowsLogged++;
             this.logger.Log(record);
         }
@@ -211,6 +240,11 @@ namespace TTP.Managers
                     yield return enumerator.Current;
                 }
                 enumerator = this.GenerateSimulatedAnnealingConfigs(filePath, this.FullSearchConfig);
+                while (enumerator.MoveNext())
+                {
+                    yield return enumerator.Current;
+                }
+                enumerator = this.GenerateWavyConfigs(filePath, this.FullSearchConfig);
                 while (enumerator.MoveNext())
                 {
                     yield return enumerator.Current;
@@ -318,6 +352,81 @@ namespace TTP.Managers
                 }
             }
         }
+
+        private IEnumerator<IConfig> GenerateWavyConfigs(string filePath, FullSearchConfig fullSearchConfig)
+        {
+            var wavyHybrid = fullSearchConfig.WavyHybrid;
+            if (wavyHybrid == null)
+            {
+                yield break;
+            }
+            foreach (var mutatorSA in wavyHybrid.MutatorsSA)
+            {
+                foreach (var mutatorTS in wavyHybrid.MutatorsTS)
+                {
+                    foreach (var specimenInitializator in wavyHybrid.SpecimenInitializators)
+                    {
+                        foreach (var neigbourhoodSizeSA in wavyHybrid.NeighbourhoodSizeSA)
+                        {
+                            foreach (var neigbourhoodSizeTS in wavyHybrid.NeighbourhoodSizeTS)
+                            {
+                                foreach (var greedyKnapsack in wavyHybrid.UseGreedyKnapsack)
+                                {
+                                    foreach (var annealingRate in wavyHybrid.AnnealingRate)
+                                    {
+                                        foreach (var hybridIteration in wavyHybrid.HybridIterations)
+                                        {
+                                            foreach (var startingTemperature in wavyHybrid.StartingTemperature)
+                                            {
+                                                foreach (var startingTemperatureChange in wavyHybrid.StartingTemperatureChange)
+                                                {
+                                                    foreach (var targetTemperature in wavyHybrid.TargetTemperature)
+                                                    {
+                                                        foreach (var iterations in wavyHybrid.Iterations)
+                                                        {
+                                                            foreach (var tabuSize in wavyHybrid.TabuSize)
+                                                            {
+                                                                foreach(var startingMetaheuristic in wavyHybrid.StartingMetaheuristicTypes)
+                                                                {
+                                                                    yield return new WavyHybridConfig()
+                                                                    {
+                                                                        AnnealingRate = annealingRate,
+                                                                        MutatorSA = mutatorSA,
+                                                                        MutatorTS = mutatorTS,
+                                                                        HybridIterations = hybridIteration,
+                                                                        InputFileName = filePath,
+                                                                        OutputFileName = fullSearchConfig.OutputPath,
+                                                                        Iterations = iterations,
+                                                                        NeighbourhoodSizeSA = neigbourhoodSizeSA,
+                                                                        NeighbourhoodSizeTS = neigbourhoodSizeTS,
+                                                                        RunCount = fullSearchConfig.RunCount,
+                                                                        SpecimenInitializator = specimenInitializator,
+                                                                        StartingTemperature = startingTemperature,
+                                                                        TabuSize = tabuSize,
+                                                                        TargetTemperature = targetTemperature,
+                                                                        StartingTemperatureChange = startingTemperatureChange,
+                                                                        UseGreedyKnapsack = greedyKnapsack,
+                                                                        AdditionalLoggingPathTemplate = wavyHybrid.AdditionalLoggingPathTemplate,
+                                                                        UseAdditionalLogging = wavyHybrid.UseAdditionalLogging,
+                                                                        UseLogging = wavyHybrid.UseLogging,
+                                                                        LoggingPathTemplate = wavyHybrid.LoggingPathTemplate,
+                                                                    };
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         private IEnumerator<IConfig> GenerateSimulatedAnnealingConfigs(string filePath, FullSearchConfig fullSearchConfig)
         {
             FullSearchSimulatedAnnealing? simulatedAnnealing = fullSearchConfig.SimulatedAnnealing;
@@ -408,7 +517,7 @@ namespace TTP.Managers
                 var knapsackMutator = new KnapsackMutator(data, tabuConfig.GreedyKnapsackMutator);
                 var neighbourhood = new Neighbourhood(mutator, knapsackMutator);
 
-                var tabuSearch = new TabuSearchManager(data, factory, neighbourhood, null, tabuConfig.Iterations, tabuConfig.NeighborhoodSize, tabuConfig.TabuSize);
+                var tabuSearch = new TabuSearchManager(factory, neighbourhood, null, tabuConfig.Iterations, tabuConfig.NeighborhoodSize, tabuConfig.TabuSize);
                 results.Add(tabuSearch.RunTabuSearch());
             }
             return results;
@@ -553,6 +662,41 @@ namespace TTP.Managers
                 }
                 results.Add(learningManager.Best);
             }
+            return results;
+        }
+
+        public List<Specimen> RunWavyHybrid(WavyHybridConfig config)
+        {
+            var results = new List<Specimen>();
+            var factory = new WavyHybridManagerFactory();
+            Parallel.For(0, config.RunCount, (i, state) =>
+            {
+                CSVLogger<Specimen, WavyHybridRecord>? logger = null;
+                string path;
+                if (config.UseLogging)
+                {
+                    lock (this.additionalLoggingLock)
+                    {
+                        path = string.Format(config.LoggingPathTemplate, this.additionalLoggingFileIndex++);
+                    }
+                    logger = new CSVLogger<Specimen, WavyHybridRecord>(path);
+                }
+                //local function
+                void Manager_RecordCreated(object sender, WavyHybridRecord e)
+                {
+                    logger?.Log(e);
+                }
+                //
+                logger?.RunLogger();
+                var manager = factory.Create(config);
+                manager.RecordCreated += Manager_RecordCreated;
+                var specimen = manager.RunManager();
+                results.Add(specimen);
+
+                logger?.Wait();
+                logger?.Dispose();
+                manager.RecordCreated -= Manager_RecordCreated;
+            });
             return results;
         }
 

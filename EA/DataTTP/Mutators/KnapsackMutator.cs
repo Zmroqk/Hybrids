@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TTP.DataTTP.Mutators
+namespace Meta.DataTTP.Mutators
 {
     public class KnapsackMutator : IMutator<Specimen>
     {

@@ -7,12 +7,10 @@ using System.Threading.Tasks;
 
 namespace Meta.DataTTP.Loggers
 {
-    public class SimulatedAnnealingRecord : IRecord
+    public class WavyHybridRecord : IRecord
     {
         public int Iteration { get; set; }
         public double BestScore { get; set; }
         public double CurrentScore { get; set; }
-        public double AverageScore { get; set; }
-        public double WorstScore { get; set; }
     }
 }
