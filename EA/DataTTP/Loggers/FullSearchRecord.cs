@@ -36,5 +36,7 @@ namespace Meta.DataTTP.Loggers
         public int Iterations { get; set; }
         public double StartingTemperatureChangeWavyHybrid { get; set; }
         public string StartingMetaheuristics { get; set; }
+        public int Age { get; set; }
+        public int AgeVariety { get; set; }
     }
 }

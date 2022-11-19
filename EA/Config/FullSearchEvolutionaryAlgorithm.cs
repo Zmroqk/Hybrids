@@ -15,8 +15,10 @@ namespace Meta.Config
         public int MinPopulationSize { get; set; }
         public int MaxPopulationSize { get; set; }
         public int PopulationSizeChange { get; set; } = 1;
+        public int[] PopulationSizes { get; set; }
         public int MinEpochs { get; set; }
         public int MaxEpochs { get; set; }
         public int EpochsChange { get; set; } = 1;
+        public int[] Epochs { get; set; }
     }
 }

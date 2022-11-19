@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EA.Core
 {
-    public class LearningManagerBase<T, TRecord> : ILearningManager<T, TRecord> where T : ISpecimen<T> where TRecord : IRecord, new()
+    public class EAManagerBase<T, TRecord> : ILearningManager<T, TRecord>, IManager<T> where T : ISpecimen<T> where TRecord : IRecord, new()
     {
         public IList<T> CurrentEpochSpecimens { get; set; }
         public IMutator<T> Mutator { get; set; }
@@ -20,14 +20,16 @@ namespace EA.Core
         public ILogger<TRecord>? Logger { get; set; }
 
         public int CurrentEpoch { get; set; }
+        public int Epochs { get; set; }
         public IAdditionalOperations<T>? AdditionalOperationsHandler { get; set; }
         public T Best { get; set; }
 
-        public LearningManagerBase(IMutator<T> mutator
+        public EAManagerBase(IMutator<T> mutator
             , ICrossover<T> crossover
             , ISelector<T> selector
             , ISpecimenFactory<T> specimenFactory
             , uint populationSize
+            , int epochs
             , ILogger<TRecord>? logger = null
             , IAdditionalOperations<T> additionalOperations = null
             )
@@ -40,6 +42,7 @@ namespace EA.Core
             this.Logger = logger;
             this.CurrentEpoch = 0;
             this.AdditionalOperationsHandler = additionalOperations;
+            this.Epochs = epochs;
         }
 
         public virtual void Init()
@@ -75,6 +78,15 @@ namespace EA.Core
             }     
             this.Logger?.Log(new TRecord());
             this.CurrentEpoch++;
+        }
+
+        public T RunManager()
+        {
+            for(int i = 0; i < this.Epochs; i++)
+            {
+                this.NextEpoch();
+            }
+            return this.Best;
         }
     }
 }

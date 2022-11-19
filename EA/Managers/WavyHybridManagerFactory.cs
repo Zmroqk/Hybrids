@@ -67,7 +67,7 @@ namespace Meta.Managers
             ILogger<WavyHybridRecord> innerLogger = null;
             if(config.UseAdditionalLogging)
             {
-                var profile = MapperProfile.Instance;
+                var profile = MapperProfile.Profile;
                 string path;
                 lock (Lock)
                 {

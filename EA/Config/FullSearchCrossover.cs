@@ -12,5 +12,7 @@ namespace Meta.Config
         public double MinProbability { get; set; }
         public double MaxProbability { get; set; }
         public double ProbabilityChange { get; set; } = 0.001d;
+        public double[] Probabilities { get; set; }
+
     }
 }

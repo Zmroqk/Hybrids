@@ -13,5 +13,6 @@ namespace Meta.Config
         public double MinMutateRatio { get; set; }
         public double MaxMutateRatio { get; set; }
         public double MutateRatioChange { get; set; } = 0.001;
+        public double[] MutateRatios { get; set; }
     }
 }

@@ -12,5 +12,6 @@ namespace Meta.Config
         public int MinSpecimenCount { get; set; }
         public int MaxSpecimenCount { get; set; }
         public int SpecimenCountChange { get; set; } = 1;
+        public double[] SpecimenCounts { get; set; }
     }
 }

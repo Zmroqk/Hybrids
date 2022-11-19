@@ -17,5 +17,6 @@ namespace Meta.Config
         public FullSearchSimulatedAnnealing? SimulatedAnnealing { get; set; }
         public FullSearchEvolutionaryAlgorithm? EvolutionaryAlgorithm { get; set; }
         public FullSearchWavyHybrid? WavyHybrid { get; set; }
+        public FullSearchAgingHybrid? AgingHybrid { get; set; }
     }
 }

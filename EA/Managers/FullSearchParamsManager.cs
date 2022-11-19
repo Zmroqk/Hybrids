@@ -11,7 +11,6 @@ using Meta.DataTTP.Inititializators;
 using Meta.DataTTP.Loggers;
 using Meta.DataTTP.Mutators;
 using Meta.DataTTP.Neighborhoods;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Meta.Managers
 {
@@ -27,7 +26,7 @@ namespace Meta.Managers
         private IEnumerator<IConfig> Configs;
         private int rowsLogged;
         private int fileIndex;
-        private int additionalLoggingFileIndex;
+        private Dictionary<string, int> additionalLoggingIndexes;
         private object additionalLoggingLock;
         private Dictionary<string, Data> LoadedData { get; set; }
         public FullSearchParamsManager(FullSearchConfig config, int maxThreads)
@@ -37,9 +36,9 @@ namespace Meta.Managers
             this.currentTasks = new List<(Task<List<Specimen>>, IConfig)>();
             this.rowsLogged = 0;
             this.fileIndex = 0;
-            this.additionalLoggingFileIndex = 0;
             this.additionalLoggingLock = new object();
             this.LoadedData = new Dictionary<string, Data>();
+            this.additionalLoggingIndexes = new Dictionary<string, int>();
         }
 
         public void Run()
@@ -78,6 +77,9 @@ namespace Meta.Managers
                     else {
                         switch (config)
                         {
+                            case AgingHybridConfig:
+                                this.currentTasks.Add((Task.Run(() => this.RunAgingHybrid((AgingHybridConfig)config)), config));
+                                break;
                             case LearningConfig:
                                 this.currentTasks.Add((Task.Run(() => this.RunEvolutionaryAlgorithm((LearningConfig)config)), config));
                                 break;
@@ -86,6 +88,9 @@ namespace Meta.Managers
                                 break;
                             case SimulatedAnnealingConfig:
                                 this.currentTasks.Add((Task.Run(() => this.RunSimulatedAnnealing((SimulatedAnnealingConfig)config)), config));
+                                break;
+                            case WavyHybridConfig:
+                                this.currentTasks.Add((Task.Run(() => this.RunWavyHybrid((WavyHybridConfig)config)), config));
                                 break;
                         }
                     }
@@ -105,6 +110,7 @@ namespace Meta.Managers
             FullSearchRecord record;
             switch (config)
             {
+                case AgingHybridConfig:
                 case LearningConfig:
                     var learningConfig = (LearningConfig)config;
                     if (this.logger == null || this.rowsLogged == 1000000)
@@ -129,6 +135,12 @@ namespace Meta.Managers
                         FileName = learningConfig.InputFileName,
                         GreeedyKnapsack = true
                     };
+                    if(learningConfig is AgingHybridConfig)
+                    {
+                        var agingHybridConfig = (AgingHybridConfig)learningConfig;
+                        record.Age = agingHybridConfig.Age;
+                        record.AgeVariety = agingHybridConfig.AgeVariety;
+                    }
                     break;
                 case TabuConfig:
                     var tabuConfig = (TabuConfig)config;
@@ -249,6 +261,11 @@ namespace Meta.Managers
                 {
                     yield return enumerator.Current;
                 }
+                enumerator = this.GenerateAgingHybridConfigs(filePath, this.FullSearchConfig);
+                while (enumerator.MoveNext())
+                {
+                    yield return enumerator.Current;
+                }
             }
         }
 
@@ -349,6 +366,77 @@ namespace Meta.Managers
                             }
                         }
                     }                  
+                }
+            }
+        }
+
+        private IEnumerator<IConfig> GenerateAgingHybridConfigs(string filePath, FullSearchConfig fullSearchConfig)
+        {
+            FullSearchAgingHybrid? agingHybridConfig = fullSearchConfig.AgingHybrid;
+            if (agingHybridConfig == null)
+            {
+                yield break;
+            }
+            foreach (var mutator in agingHybridConfig.Mutator.Types)
+            {
+                foreach (var crossover in agingHybridConfig.Crossover.Types)
+                {
+                    foreach (var selector in agingHybridConfig.Selector.Types)
+                    {
+                        foreach (var specimenInitializator in agingHybridConfig.SpecimenInitializators)
+                        {
+                            foreach (double mutatorProb in agingHybridConfig.Mutator.MutateRatios)
+                            {
+                                foreach (double crossoverProb in agingHybridConfig.Crossover.Probabilities)
+                                {
+                                    foreach (int specimenCount in agingHybridConfig.Selector.SpecimenCounts)
+                                    {
+                                        foreach (int populationSize in agingHybridConfig.PopulationSizes)
+                                        {
+                                            foreach (int epochs in agingHybridConfig.Epochs)
+                                            {
+                                                foreach(int age in agingHybridConfig.Ages)
+                                                {
+                                                    foreach(int ageVariety in agingHybridConfig.AgeVarieties)
+                                                    {
+                                                        var config = new AgingHybridConfig()
+                                                        {
+                                                            Mutator = new MutatorConfig()
+                                                            {
+                                                                Type = mutator,
+                                                                MutateRatio = mutatorProb
+                                                            },
+                                                            Selector = new SelectorConfig()
+                                                            {
+                                                                Type = selector,
+                                                                SpecimenCount = specimenCount,
+                                                            },
+                                                            Crossover = new CrossoverConfig()
+                                                            {
+                                                                Type = crossover,
+                                                                Probability = crossoverProb,
+                                                            },
+                                                            InputFileName = filePath,
+                                                            Epochs = epochs,
+                                                            PopulationSize = populationSize,
+                                                            RunCount = fullSearchConfig.RunCount,
+                                                            SpecimenInitializator = specimenInitializator,
+                                                            OutputFileName = fullSearchConfig.OutputPath,
+                                                            Age = age,
+                                                            AgeVariety = ageVariety,
+                                                            UseLogging = agingHybridConfig.UseLogging,
+                                                            LoggingTemplatePath = agingHybridConfig.LoggingTemplatePath
+                                                        };
+                                                        yield return config;
+                                                    }
+                                                }                                                                                           
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -646,12 +734,13 @@ namespace Meta.Managers
                 var additionalOperations = new AdditionalOperationsHandler(new KnapsackMutator(data, true));
                 var specimenFactory = new SpecimenFactory(data, specimenInitializator);
 
-                var learningManager = new LearningManager(data
+                var learningManager = new EAManager(data
                     , mutator
                     , crossover
                     , selector
                     , specimenFactory
                     , (uint)learningConfig.PopulationSize
+                    , learningConfig.Epochs
                     , null
                     , additionalOperations
                     );
@@ -665,7 +754,45 @@ namespace Meta.Managers
             return results;
         }
 
-        public List<Specimen> RunWavyHybrid(WavyHybridConfig config)
+        private List<Specimen> RunAgingHybrid(AgingHybridConfig config)
+        {
+            var results = new List<Specimen>();
+            var factory = new AgingHybridManagerFactory();
+            var mapper = MapperProfile.Mapper;
+            Parallel.For(0, config.RunCount, (i, state) =>
+            {
+                CSVLogger<Specimen, WavyHybridRecord>? logger = null;
+                string path;
+                if (config.UseLogging)
+                {
+                    lock (this.additionalLoggingLock)
+                    {
+                        if (!this.additionalLoggingIndexes.ContainsKey(config.LoggingTemplatePath))
+                        {
+                            this.additionalLoggingIndexes.Add(config.LoggingTemplatePath, 0);
+                        }
+                        path = string.Format(config.LoggingTemplatePath, this.additionalLoggingIndexes[config.LoggingTemplatePath]++);
+                    }
+                    logger = new CSVLogger<Specimen, WavyHybridRecord>(path);
+                }
+                //local function
+                void Manager_RecordCreated(object sender, WavyHybridRecord e)
+                {
+                    logger?.Log(e);
+                }
+                //
+                logger?.RunLogger();
+                var manager = factory.Create(config);
+                var specimen = manager.RunManager();
+                results.Add(mapper.Map<SpecimenWithAge, Specimen>(specimen));
+
+                logger?.Wait();
+                logger?.Dispose();
+            });
+            return results;
+        }
+
+        private List<Specimen> RunWavyHybrid(WavyHybridConfig config)
         {
             var results = new List<Specimen>();
             var factory = new WavyHybridManagerFactory();
@@ -677,7 +804,11 @@ namespace Meta.Managers
                 {
                     lock (this.additionalLoggingLock)
                     {
-                        path = string.Format(config.LoggingPathTemplate, this.additionalLoggingFileIndex++);
+                        if (!this.additionalLoggingIndexes.ContainsKey(config.LoggingPathTemplate))
+                        {
+                            this.additionalLoggingIndexes.Add(config.LoggingPathTemplate, 0);
+                        }
+                        path = string.Format(config.LoggingPathTemplate, this.additionalLoggingIndexes[config.LoggingPathTemplate]++);
                     }
                     logger = new CSVLogger<Specimen, WavyHybridRecord>(path);
                 }

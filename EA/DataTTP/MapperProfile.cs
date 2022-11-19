@@ -10,7 +10,12 @@ namespace Meta.DataTTP
 {
     public class MapperProfile : Profile
     {
-        public static MapperProfile Instance = new MapperProfile();
+        public static MapperProfile Profile = new MapperProfile();
+        public static Mapper Mapper = new Mapper(new MapperConfiguration(options =>
+        {
+            options.AddProfile<MapperProfile>();
+        }));
+
         public MapperProfile() { 
             this.CreateMap<TabuRecord, WavyHybridRecord>()
                 .ForMember(x => x.CurrentScore
@@ -23,6 +28,10 @@ namespace Meta.DataTTP
                     , x => x.MapFrom(xx => xx.Generation)
                 );
             this.CreateMap<SimulatedAnnealingRecord, WavyHybridRecord>();
+            this.CreateMap<SpecimenWithAge, Specimen>()
+                .ForMember(x => x.SpecimenInitialization
+                    , x => x.Ignore()
+                );
         }
     }
 }

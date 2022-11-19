@@ -17,7 +17,7 @@ namespace Meta.Managers
 {
     public class EAManagerFactory
     {
-        public LearningManager Create(LearningConfig config)
+        public EAManager Create(LearningConfig config)
         {
             var dataLoader = new DataLoader();
             var data = dataLoader.Load(config.InputFileName);
@@ -70,12 +70,13 @@ namespace Meta.Managers
             var additionalOperations = new AdditionalOperationsHandler(new KnapsackMutator(data, true));
             var specimenFactory = new SpecimenFactory(data, specimenInitializator);
 
-            return new LearningManager(data
+            return new EAManager(data
                 , mutator
                 , crossover
                 , selector
                 , specimenFactory
                 , (uint)config.PopulationSize
+                , config.Epochs
                 , null
                 , additionalOperations
                 );
