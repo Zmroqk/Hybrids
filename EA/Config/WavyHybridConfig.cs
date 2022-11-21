@@ -9,13 +9,14 @@ namespace Meta.Config
 {
     public class WavyHybridConfig : IConfig
     {
+        public long ConfigIndex { get; set; }
         public MutatorType MutatorSA { get; set; }
         public MutatorType MutatorTS { get; set; }
         public bool UseGreedyKnapsack { get; set; }
         public SpecimenInitializatorConfig SpecimenInitializator { get; set; }
         public int NeighbourhoodSizeSA { get; set; }
         public int NeighbourhoodSizeTS { get; set; }
-        public int AnnealingRate { get; set; }
+        public double AnnealingRate { get; set; }
         public int StartingTemperature { get; set; }
         public int TargetTemperature { get; set; }
         public int Iterations { get; set; }

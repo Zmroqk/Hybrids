@@ -11,6 +11,7 @@ using Meta.DataTTP.Mutators;
 using Meta.DataTTP.Neighborhoods;
 using Meta.Managers;
 using System.Threading.Tasks;
+using Loggers;
 
 Console.WriteLine("Select mode: ");
 Console.WriteLine("0. EA ");
@@ -183,6 +184,7 @@ else if(modeNumber == 5)
         Parallel.For(0, config.RunCount, (i, state) =>
         {
             CSVLogger<Specimen, WavyHybridRecord>? logger = null;
+            CSVLogger<Specimen, WavyHybridRecord>? innerLogger;
             string path;
             if (config.UseLogging)
             {
@@ -196,10 +198,12 @@ else if(modeNumber == 5)
             }
             //
             logger?.RunLogger();
-            var manager = factory.Create(config);
+            var manager = factory.Create(config, out innerLogger, string.Format(config.AdditionalLoggingPathTemplate, i));
             manager.RecordCreated += Manager_RecordCreated;
             var specimen = manager.RunManager();
 
+            innerLogger?.Wait();
+            innerLogger?.Dispose();
             logger?.Wait();
             logger?.Dispose();
             manager.RecordCreated -= Manager_RecordCreated;

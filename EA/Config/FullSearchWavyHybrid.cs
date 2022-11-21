@@ -15,7 +15,7 @@ namespace Meta.Config
         public SpecimenInitializatorConfig[] SpecimenInitializators { get; set; }
         public int[] NeighbourhoodSizeSA { get; set; }
         public int[] NeighbourhoodSizeTS { get; set; }
-        public int[] AnnealingRate { get; set; }
+        public double[] AnnealingRate { get; set; }
         public int[] StartingTemperature { get; set; }
         public int[] TargetTemperature { get; set; }
         public int[] Iterations { get; set; }

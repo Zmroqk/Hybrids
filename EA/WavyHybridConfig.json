@@ -3,30 +3,30 @@
     "RunCount": 10,
     "Threads": 2,
     "FilePaths": [ "Data/easy_0.ttp" ],
-    "OutputPath": "OutputFullSearch/wavy_hybrid_easy_0.csv",
+    "OutputPath": "OutputFullSearch/wavy_hybrid_easy_0_second.csv",
     "WavyHybrid": {
       "MutatorsSA": [ "Swap", "Inverse" ],
       "MutatorsTS": [ "Swap", "Inverse" ],
       "UseGreedyKnapsack": [ true ],
-      "SpecimenInitializatorConfig": [
+      "SpecimenInitializators": [
         {
           "Type": "Greedy"
         }
       ],
       "NeighbourhoodSizeSA": [ 5, 10 ],
       "NeighbourhoodSizeTS": [ 5, 10 ],
-      "AnnealingRate": [ 0.999, 0.9999 ],
+      "AnnealingRate": [ 0.995 ],
       "StartingTemperature": [ 10000 ],
       "TargetTemperature": [ 0 ],
-      "Iterations": [ 1000, 2000 ],
-      "StartingTemperatureChange": [ 500, 1000, 2000 ],
+      "Iterations": [ 2000 ],
+      "StartingTemperatureChange": [ 1500 ],
       "TabuSize": [ 1, 100 ],
-      "HybridIterations": [ 2, 4, 6 ],
+      "HybridIterations": [ 4, 6 ],
       "UseAdditionalLogging": true,
-      "AdditionalLoggingPathTemplate": "Output/wavy_inside_data_{0}.csv",
+      "AdditionalLoggingPathTemplate": "Output_easy_second/wavy_inside_data_{0}_{1}.csv",
       "UseLogging": true,
-      "LoggingPathTemplate": "Output/wavy_data_{0}.csv",
-      "StartingMetaheuristicsType": [ "TabuSearch", "SimulatedAnnealing" ]
+      "LoggingPathTemplate": "Output_easy_second/wavy_data_{0}_{1}.csv",
+      "StartingMetaheuristicTypes": [ "TabuSearch", "SimulatedAnnealing" ]
     }
   }
 ]

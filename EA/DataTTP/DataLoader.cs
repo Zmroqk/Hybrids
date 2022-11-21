@@ -19,19 +19,22 @@ namespace Meta.DataTTP
 
         public Data GetData(string path)
         {
-            if (this.Cache.ContainsKey(path))
+            lock (this.Cache)
             {
-                return this.Cache[path];
-            }
-            else
-            {
-                var data = this.Load(path);
-                if (data == null)
+                if (this.Cache.ContainsKey(path))
                 {
-                    Environment.Exit(-1);
+                    return this.Cache[path];
                 }
-                this.Cache.Add(path, data);
-                return data;
+                else
+                {
+                    var data = this.Load(path);
+                    if (data == null)
+                    {
+                        Environment.Exit(-1);
+                    }
+                    this.Cache.Add(path, data);
+                    return data;
+                }
             }
         }
 

@@ -9,6 +9,7 @@ namespace Meta.DataTTP.Loggers
 {
     public class FullSearchRecord : IRecord
     {
+        public long ConfigIndex { get; set; }
         public string Metaheuristic { get; set; }
         public string FileName { get; set; }
         public int TabuSize { get; set; }
@@ -36,6 +37,7 @@ namespace Meta.DataTTP.Loggers
         public int Iterations { get; set; }
         public double StartingTemperatureChangeWavyHybrid { get; set; }
         public string StartingMetaheuristics { get; set; }
+        public int HybridIterations { get; set; }
         public int Age { get; set; }
         public int AgeVariety { get; set; }
     }

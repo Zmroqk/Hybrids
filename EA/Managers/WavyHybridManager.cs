@@ -1,4 +1,5 @@
 ﻿using Loggers;
+using Loggers.CSV;
 using Meta.Core;
 using Meta.DataTTP;
 using Meta.DataTTP.Loggers;
@@ -34,7 +35,8 @@ namespace Meta.Managers
             , double startingTemperature
             , double startingTemperatureChange
             , double iterations
-            , MetaheuristicType startingMetaheuristic)
+            , MetaheuristicType startingMetaheuristic
+            )
         {
             this.TabuSearchFactory = tabuSearchFactory;
             this.SimulatedAnnealingFactory = simulatedAnnealingFactory;
@@ -83,6 +85,7 @@ namespace Meta.Managers
                     CurrentScore = current.Evaluate()
                 };
                 this.RecordCreated?.Invoke(this, record);
+                this.CurrentTemperature -= this.StartingTemperatureChange;
             }
             return best;
         }

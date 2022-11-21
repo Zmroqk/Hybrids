@@ -23,10 +23,7 @@ namespace Meta.Managers
 {
     public class WavyHybridManagerFactory
     {
-        private static int FileIndex = 0;
-        private static object Lock = new object();
-
-        public WavyHybridManager Create(WavyHybridConfig config)
+        public WavyHybridManager Create(WavyHybridConfig config, out CSVLogger<Specimen, WavyHybridRecord>? logger, string innerPath)
         {
             var dataLoader = DataLoader.Instance;
             var data = dataLoader.GetData(config.InputFileName);
@@ -68,15 +65,22 @@ namespace Meta.Managers
             if(config.UseAdditionalLogging)
             {
                 var profile = MapperProfile.Profile;
-                string path;
-                lock (Lock)
-                {
-                    path = string.Format(config.AdditionalLoggingPathTemplate, FileIndex++);
-                }
-                innerLogger = new CSVLogger<Specimen, WavyHybridRecord>(path);
-                innerTabuLogger = new TransformLogger<TabuRecord, WavyHybridRecord>(innerLogger, profile);
-                innerSimulatedAnnealingLogger = new TransformLogger<SimulatedAnnealingRecord, WavyHybridRecord>(innerLogger, profile);
+                var innerCsvLogger = new CSVLogger<Specimen, WavyHybridRecord>(innerPath);
+                innerCsvLogger.RunLogger();
+                innerLogger = innerCsvLogger;
+                var transformLoggerTabu = new TransformLogger<TabuRecord, WavyHybridRecord>(innerLogger, profile);
+                var transformerLoggerAnnealing = new TransformLogger<SimulatedAnnealingRecord, WavyHybridRecord>(innerLogger, profile);
+                transformLoggerTabu.Init();
+                transformerLoggerAnnealing.Init();
+                innerTabuLogger = transformLoggerTabu;
+                innerSimulatedAnnealingLogger = transformerLoggerAnnealing;
+                logger = innerCsvLogger;
             }
+            else
+            {
+                logger = null;
+            }
+
             var tabuSearchFactory = new TabuSearchWithInitSpecimenManagerFactory(neighbourhoodTS
                 , innerTabuLogger
                 , config.Iterations
@@ -96,7 +100,7 @@ namespace Meta.Managers
                 , specimenFactory
                 , config.StartingTemperature
                 , config.StartingTemperatureChange
-                , config.Iterations
+                , config.HybridIterations
                 , config.StartingMetaheuristic
             );
         }

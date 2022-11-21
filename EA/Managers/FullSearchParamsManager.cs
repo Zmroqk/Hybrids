@@ -194,6 +194,7 @@ namespace Meta.Managers
                     }
                     record = new FullSearchRecord()
                     {
+                        ConfigIndex = wavyHybridConfig.ConfigIndex,
                         BestScore = results.Max(x => x.Evaluate()),
                         WorstScore = results.Min(x => x.Evaluate()),
                         AverageScore = results.Average(x => x.Evaluate()),
@@ -213,6 +214,7 @@ namespace Meta.Managers
                         TabuSize = wavyHybridConfig.TabuSize,
                         TargetTemperature = wavyHybridConfig.TargetTemperature,
                         StartingMetaheuristics = wavyHybridConfig.StartingMetaheuristic.ToString(),
+                        HybridIterations = wavyHybridConfig.HybridIterations
                     };
                     break;
                 default:
@@ -478,6 +480,7 @@ namespace Meta.Managers
                                                                 {
                                                                     yield return new WavyHybridConfig()
                                                                     {
+                                                                        ConfigIndex = fileIndex++,
                                                                         AnnealingRate = annealingRate,
                                                                         MutatorSA = mutatorSA,
                                                                         MutatorTS = mutatorTS,
@@ -498,6 +501,7 @@ namespace Meta.Managers
                                                                         UseAdditionalLogging = wavyHybrid.UseAdditionalLogging,
                                                                         UseLogging = wavyHybrid.UseLogging,
                                                                         LoggingPathTemplate = wavyHybrid.LoggingPathTemplate,
+                                                                        StartingMetaheuristic = startingMetaheuristic,
                                                                     };
                                                                 }
                                                             }
@@ -799,17 +803,10 @@ namespace Meta.Managers
             Parallel.For(0, config.RunCount, (i, state) =>
             {
                 CSVLogger<Specimen, WavyHybridRecord>? logger = null;
-                string path;
+                CSVLogger<Specimen, WavyHybridRecord>? innerLogger;
                 if (config.UseLogging)
                 {
-                    lock (this.additionalLoggingLock)
-                    {
-                        if (!this.additionalLoggingIndexes.ContainsKey(config.LoggingPathTemplate))
-                        {
-                            this.additionalLoggingIndexes.Add(config.LoggingPathTemplate, 0);
-                        }
-                        path = string.Format(config.LoggingPathTemplate, this.additionalLoggingIndexes[config.LoggingPathTemplate]++);
-                    }
+                    var path = string.Format(config.LoggingPathTemplate, config.ConfigIndex, i);
                     logger = new CSVLogger<Specimen, WavyHybridRecord>(path);
                 }
                 //local function
@@ -819,11 +816,15 @@ namespace Meta.Managers
                 }
                 //
                 logger?.RunLogger();
-                var manager = factory.Create(config);
+                var innerPath = string.Format(config.AdditionalLoggingPathTemplate, config.ConfigIndex, i);
+                var manager = factory.Create(config, out innerLogger, innerPath);
+
                 manager.RecordCreated += Manager_RecordCreated;
                 var specimen = manager.RunManager();
                 results.Add(specimen);
 
+                innerLogger?.Wait();
+                innerLogger?.Dispose();
                 logger?.Wait();
                 logger?.Dispose();
                 manager.RecordCreated -= Manager_RecordCreated;
