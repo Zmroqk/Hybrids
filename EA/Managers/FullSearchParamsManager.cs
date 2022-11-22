@@ -11,6 +11,7 @@ using Meta.DataTTP.Inititializators;
 using Meta.DataTTP.Loggers;
 using Meta.DataTTP.Mutators;
 using Meta.DataTTP.Neighborhoods;
+using MathNet.Numerics.Statistics;
 
 namespace Meta.Managers
 {
@@ -69,12 +70,8 @@ namespace Meta.Managers
                 for(int i = this.MaxThreads - this.currentTasks.Count; i > 0; i--)
                 {                    
                     var config = this.Configs.Current;
-                    var canMoveNext = this.Configs.MoveNext();
-                    if (!canMoveNext)
+                    if (!this.cancellationToken.IsCancellationRequested)
                     {
-                        this.cancellationToken.Cancel();
-                    }
-                    else {
                         switch (config)
                         {
                             case AgingHybridConfig:
@@ -94,6 +91,11 @@ namespace Meta.Managers
                                 break;
                         }
                     }
+                    var canMoveNext = this.Configs.MoveNext();
+                    if (!canMoveNext)
+                    {
+                        this.cancellationToken.Cancel();
+                    }
                 }
                 Thread.Sleep(500);
             }
@@ -108,6 +110,7 @@ namespace Meta.Managers
         private void LogData(List<Specimen> results, IConfig config)
         {
             FullSearchRecord record;
+            var scores = results.Select(x => x.Evaluate());
             switch (config)
             {
                 case AgingHybridConfig:
@@ -133,7 +136,10 @@ namespace Meta.Managers
                         Epochs = learningConfig.Epochs,
                         Metaheuristic = "EvolutionaryAlgorithm",
                         FileName = learningConfig.InputFileName,
-                        GreeedyKnapsack = true
+                        GreeedyKnapsack = true,
+                        Median = scores.Median(),
+                        FirstQuantile = scores.LowerQuartile(),
+                        ThirdQuantile = scores.UpperQuartile()
                     };
                     if(learningConfig is AgingHybridConfig)
                     {
@@ -161,6 +167,9 @@ namespace Meta.Managers
                         NeighborSizeTS = tabuConfig.NeighborhoodSize,   
                         Metaheuristic = "Tabu",
                         FileName = tabuConfig.InputFileName,
+                        Median = scores.Median(),
+                        FirstQuantile = scores.LowerQuartile(),
+                        ThirdQuantile = scores.UpperQuartile()
                     };
                     break;
                 case SimulatedAnnealingConfig:
@@ -184,6 +193,9 @@ namespace Meta.Managers
                         AnnealingRate = simulatedAnnealingConfig.AnnealingRate,
                         Metaheuristic = "SimulatedAnnealing",
                         FileName = simulatedAnnealingConfig.InputFileName,
+                        Median = scores.Median(),
+                        FirstQuantile = scores.LowerQuartile(),
+                        ThirdQuantile = scores.UpperQuartile()
                     };
                     break;
                 case WavyHybridConfig:
@@ -214,7 +226,10 @@ namespace Meta.Managers
                         TabuSize = wavyHybridConfig.TabuSize,
                         TargetTemperature = wavyHybridConfig.TargetTemperature,
                         StartingMetaheuristics = wavyHybridConfig.StartingMetaheuristic.ToString(),
-                        HybridIterations = wavyHybridConfig.HybridIterations
+                        HybridIterations = wavyHybridConfig.HybridIterations,
+                        Median = scores.Median(),
+                        FirstQuantile = scores.LowerQuartile(),
+                        ThirdQuantile = scores.UpperQuartile()
                     };
                     break;
                 default:

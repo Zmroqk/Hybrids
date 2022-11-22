@@ -12,6 +12,7 @@ using Meta.DataTTP.Neighborhoods;
 using Meta.Managers;
 using System.Threading.Tasks;
 using Loggers;
+using MathNet.Numerics.Statistics;
 
 Console.WriteLine("Select mode: ");
 Console.WriteLine("0. EA ");
@@ -20,6 +21,7 @@ Console.WriteLine("2. Random ");
 Console.WriteLine("3. Simulated Annealing ");
 Console.WriteLine("4. Full search ");
 Console.WriteLine("5. Wavy hybrid ");
+Console.WriteLine("6. Greedy ");
 string mode = Console.ReadLine();
 int modeNumber;
 if(!int.TryParse(mode, out modeNumber))
@@ -88,22 +90,37 @@ else if (modeNumber == 1)
         logger.Dispose();
     }
 }
-else if(modeNumber == 2)
+else if (modeNumber == 2)
 {
+    Console.WriteLine("Path to file");
+    var path = Console.ReadLine();
+    Console.WriteLine("Output path");
+    var outputPath = Console.ReadLine();
     var dataLoader = new DataLoader();
-    var data = dataLoader.Load("ai-lab1-ttp_data/medium_0.ttp");
+    var data = dataLoader.Load(path);
     ISpecimenInitializator<Specimen> initializator = new RandomSpecimenInitializator(data, 0.3);
-    var logger = new CSVLogger<Specimen, RandomRecord>("Random.csv");
+    var logger = new CSVLogger<Specimen, FullSearchRecord>(outputPath);
     logger.RunLogger();
+    var specimens = new List<Specimen>();
     for (int i = 0; i < 10000; i++)
     {
         var specimen = new Specimen(data, initializator);
         specimen.Init();
-        logger.Log(new RandomRecord()
-        {
-            Value = specimen.Evaluate()
-        });
+        specimens.Add(specimen);
     }
+    var scores = specimens.Select(x => x.Evaluate());
+    logger.Log(new FullSearchRecord()
+    {
+        Metaheuristic = "Random",
+        FileName = path,
+        StandardError = Specimen.CalculateStandardErrorForPopulation(specimens),
+        BestScore = specimens.Max(x => x.Evaluate()),
+        WorstScore = specimens.Min(x => x.Evaluate()),
+        AverageScore = specimens.Average(x => x.Evaluate()),
+        Median = scores.Median(),
+        FirstQuantile = scores.LowerQuartile(),
+        ThirdQuantile = scores.UpperQuartile()
+    });
     logger.Wait();
     logger.Dispose();
 }
@@ -209,5 +226,40 @@ else if(modeNumber == 5)
             manager.RecordCreated -= Manager_RecordCreated;
         });
     }
+}
+else if (modeNumber == 6)
+{
+    Console.WriteLine("Path to file");
+    var path = Console.ReadLine();
+    Console.WriteLine("Output path");
+    var outputPath = Console.ReadLine();
+    var dataLoader = new DataLoader();
+    var data = dataLoader.Load(path);
+    var initializer = new GreedySpecimenInitializator(data, new KnapsackMutator(data));
+    var csvLogger = new CSVLogger<Specimen, FullSearchRecord>(outputPath);
+    List<Specimen> specimens = new List<Specimen>();
+    foreach (var node in data.Nodes)
+    {
+        var specimen = new Specimen(data, initializer);
+        initializer.InitializeWithSpecificNode(specimen, node);
+        specimens.Add(specimen);
+    }
+    csvLogger.RunLogger();
+    var scores = specimens.Select(x => x.Evaluate());
+    var greedyRecord = new FullSearchRecord()
+    {
+        Metaheuristic = "Greedy",
+        FileName = path,
+        StandardError = Specimen.CalculateStandardErrorForPopulation(specimens),
+        BestScore = specimens.Max(x => x.Evaluate()),
+        WorstScore = specimens.Min(x => x.Evaluate()),
+        AverageScore = specimens.Average(x => x.Evaluate()),
+        Median = scores.Median(),
+        FirstQuantile = scores.LowerQuartile(),
+        ThirdQuantile = scores.UpperQuartile()
+    };
+    csvLogger.Log(greedyRecord);
+    csvLogger.Wait();
+    csvLogger.Dispose();
 }
 

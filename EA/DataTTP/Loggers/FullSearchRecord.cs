@@ -22,6 +22,9 @@ namespace Meta.DataTTP.Loggers
         public double AverageScore { get; set; }
         public double WorstScore { get; set; }
         public double StandardError { get; set; }
+        public double FirstQuantile { get; set; }
+        public double Median { get; set; }
+        public double ThirdQuantile { get; set; }
         public string MutatorTypeEA { get; set; }
         public string MutatorTypeSA { get; set; }
         public string MutatorTypeTS { get; set; }

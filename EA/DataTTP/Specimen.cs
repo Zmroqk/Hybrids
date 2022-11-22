@@ -189,5 +189,11 @@ namespace Meta.DataTTP
             }
             return true;
         }
+
+        public static double CalculateStandardErrorForPopulation(List<Specimen> population)
+        {
+            var avg = population.Average(x => x.Evaluate());
+            return Math.Sqrt(population.Sum(x => Math.Pow(x.Evaluate() - avg, 2)) / population.Count) / Math.Sqrt(population.Count);
+        }
     }
 }

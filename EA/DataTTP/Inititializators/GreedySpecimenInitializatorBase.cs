@@ -50,5 +50,32 @@ namespace Meta.DataTTP.Inititializators
             }
             this.KnapsackMutator.Mutate(specimen);
         }
+
+        public void InitializeWithSpecificNode(TSpecimen specimen, Node node)
+        {
+            var citiesHash = this.Config.Nodes.ToHashSet();
+            var distanceMatrix = this.Config.GetNodeMatrix();
+            var currentCity = node;
+            citiesHash.Remove(currentCity);
+            specimen.Nodes.Add(currentCity);
+            while (citiesHash.Count > 0)
+            {
+                var infos = distanceMatrix[currentCity.Index - 1];
+                var maxDistance = 0d;
+                var selectedInfo = infos[0];
+                foreach (var info in infos)
+                {
+                    if (info.From != info.To && citiesHash.Contains(info.To) && maxDistance < info.Distance)
+                    {
+                        selectedInfo = info;
+                        maxDistance = info.Distance;
+                    }
+                }
+                currentCity = selectedInfo.To;
+                citiesHash.Remove(currentCity);
+                specimen.Nodes.Add(currentCity);
+            }
+            this.KnapsackMutator.Mutate(specimen);
+        }
     }
 }
