@@ -11,7 +11,7 @@ using Meta.DataTTP;
 
 namespace Meta.Managers
 {
-    public class EAManager : EAManagerBase<Specimen, Record>
+    public class EAManager : EAManagerBase<Specimen, EARecord>
     {
         public Data Config { get; set; }
 
@@ -22,7 +22,7 @@ namespace Meta.Managers
             , ISpecimenFactory<Specimen> specimenFactory
             , uint populationSize
             , int epochs
-            , ILogger<Record>? logger = null
+            , ILogger<EARecord>? logger = null
             , IAdditionalOperations<Specimen> additionalOperations = null
             )
             : base(mutator, crossover, selector, specimenFactory, populationSize, epochs, logger, additionalOperations)

@@ -11,7 +11,7 @@ using Meta.DataTTP;
 
 namespace Meta.Managers
 {
-    public class AgingHybridManager : EAManagerBase<SpecimenWithAge, Record>
+    public class AgingHybridManager : EAManagerBase<SpecimenWithAge, EARecord>
     {
         public AgingHybridManager(IMutator<SpecimenWithAge> mutator
             , ICrossover<SpecimenWithAge> crossover
@@ -19,7 +19,7 @@ namespace Meta.Managers
             , ISpecimenFactory<SpecimenWithAge> specimenFactory
             , uint populationSize
             , int epochs
-            , ILogger<Record>? logger = null
+            , ILogger<EARecord>? logger = null
             , IAdditionalOperations<SpecimenWithAge> additionalOperations = null
             )
             : base(mutator, crossover, selector, specimenFactory, populationSize, epochs, logger, additionalOperations)

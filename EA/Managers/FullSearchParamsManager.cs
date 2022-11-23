@@ -27,6 +27,7 @@ namespace Meta.Managers
         private IEnumerator<IConfig> Configs;
         private int rowsLogged;
         private int fileIndex;
+        private int configIndex;
         private Dictionary<string, int> additionalLoggingIndexes;
         private object additionalLoggingLock;
         private Dictionary<string, Data> LoadedData { get; set; }
@@ -37,6 +38,7 @@ namespace Meta.Managers
             this.currentTasks = new List<(Task<List<Specimen>>, IConfig)>();
             this.rowsLogged = 0;
             this.fileIndex = 0;
+            this.configIndex = 0;
             this.additionalLoggingLock = new object();
             this.LoadedData = new Dictionary<string, Data>();
             this.additionalLoggingIndexes = new Dictionary<string, int>();
@@ -418,6 +420,7 @@ namespace Meta.Managers
                                                     {
                                                         var config = new AgingHybridConfig()
                                                         {
+                                                            ConfigIndex = configIndex++,
                                                             Mutator = new MutatorConfig()
                                                             {
                                                                 Type = mutator,
@@ -495,7 +498,7 @@ namespace Meta.Managers
                                                                 {
                                                                     yield return new WavyHybridConfig()
                                                                     {
-                                                                        ConfigIndex = fileIndex++,
+                                                                        ConfigIndex = configIndex++,
                                                                         AnnealingRate = annealingRate,
                                                                         MutatorSA = mutatorSA,
                                                                         MutatorTS = mutatorTS,
@@ -780,7 +783,7 @@ namespace Meta.Managers
             var mapper = MapperProfile.Mapper;
             Parallel.For(0, config.RunCount, (i, state) =>
             {
-                CSVLogger<Specimen, WavyHybridRecord>? logger = null;
+                CSVLogger<Specimen, EARecord>? logger = null;
                 string path;
                 if (config.UseLogging)
                 {
@@ -790,20 +793,15 @@ namespace Meta.Managers
                         {
                             this.additionalLoggingIndexes.Add(config.LoggingTemplatePath, 0);
                         }
-                        path = string.Format(config.LoggingTemplatePath, this.additionalLoggingIndexes[config.LoggingTemplatePath]++);
+                        path = string.Format(config.LoggingTemplatePath, config.ConfigIndex, i);
                     }
-                    logger = new CSVLogger<Specimen, WavyHybridRecord>(path);
+                    logger = new CSVLogger<Specimen, EARecord>(path);
                 }
-                //local function
-                void Manager_RecordCreated(object sender, WavyHybridRecord e)
-                {
-                    logger?.Log(e);
-                }
-                //
                 logger?.RunLogger();
-                var manager = factory.Create(config);
+                var manager = factory.Create(config, logger);
                 var specimen = manager.RunManager();
-                results.Add(mapper.Map<SpecimenWithAge, Specimen>(specimen));
+                Specimen specimenDest = new Specimen(null, null);
+                results.Add(mapper.Map<SpecimenWithAge, Specimen>(specimen, specimenDest));
 
                 logger?.Wait();
                 logger?.Dispose();

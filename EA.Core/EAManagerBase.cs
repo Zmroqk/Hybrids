@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EA.Core
 {
-    public class EAManagerBase<T, TRecord> : ILearningManager<T, TRecord>, IManager<T> where T : ISpecimen<T> where TRecord : IRecord, new()
+    public class EAManagerBase<T, TRecord> : ILearningManager<T, TRecord>, IManager<T> where T : ISpecimen<T> where TRecord : IEARecord, new()
     {
         public IList<T> CurrentEpochSpecimens { get; set; }
         public IMutator<T> Mutator { get; set; }
@@ -37,7 +37,8 @@ namespace EA.Core
             this.CurrentEpochSpecimens = new List<T>();
             this.Mutator = mutator;
             this.Crossover = crossover;
-            this.Selector = selector;            this.PopulationSize = populationSize;
+            this.Selector = selector;
+            this.PopulationSize = populationSize;
             this.SpecimenFactory = specimenFactory;
             this.Logger = logger;
             this.CurrentEpoch = 0;
@@ -76,7 +77,12 @@ namespace EA.Core
                     this.Best = specimen;
                 }
             }     
-            this.Logger?.Log(new TRecord());
+            this.Logger?.Log(new TRecord()
+            {
+                BestScore = this.Best.Evaluate(),
+                AverageScore = this.CurrentEpochSpecimens.Average(x => x.Evaluate()),
+                WorstScore = this.CurrentEpochSpecimens.Min(x => x.Evaluate())
+            });
             this.CurrentEpoch++;
         }
 

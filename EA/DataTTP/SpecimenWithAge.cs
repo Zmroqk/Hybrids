@@ -17,12 +17,45 @@ namespace Meta.DataTTP
 
         public override SpecimenWithAge Clone()
         {
-            throw new NotImplementedException();
+            var specimen = new SpecimenWithAge(this.Config, this.SpecimenInitialization);
+            specimen.Nodes = new List<Node>(this.Nodes);
+            specimen.Items = new HashSet<Item>(this.Items);
+            specimen.IsMutated = this.IsMutated;
+            specimen.IsCrossed = this.IsCrossed;;
+            specimen.Age = Age;
+            return specimen;
         }
 
         public override bool Equals(SpecimenWithAge? other)
         {
-            throw new NotImplementedException();
+            if (other == null)
+            {
+                return false;
+            }
+            if(this.Age != other.Age)
+            {
+                return false;
+            }
+            if (this.Nodes.Count != other.Nodes.Count || this.Items.Count != other.Items.Count)
+            {
+                return false;
+            }
+            var nodeCount = this.Nodes.Count;
+            for (int i = 0; i < nodeCount; i++)
+            {
+                if (this.Nodes[i] != other.Nodes[i])
+                {
+                    return false;
+                }
+            }
+            foreach (var item in this.Items)
+            {
+                if (!other.Items.Contains(item))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

@@ -8,6 +8,7 @@ namespace Meta.Config
 {
     public class AgingHybridConfig : LearningConfig
     {
+        public int ConfigIndex { get; set; }
         public int Age { get; set; }
         public int AgeVariety { get; set; }
         public bool UseLogging { get; set; }

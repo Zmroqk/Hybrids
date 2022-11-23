@@ -19,7 +19,7 @@ namespace Meta.Managers
 {
     public class AgingHybridManagerFactory
     {
-        public AgingHybridManager Create(AgingHybridConfig config, ILogger<Record>? logger = null)
+        public AgingHybridManager Create(AgingHybridConfig config, ILogger<EARecord>? logger = null)
         {
             var dataLoader = DataLoader.Instance;
             var data = dataLoader.GetData(config.InputFileName);
@@ -79,7 +79,7 @@ namespace Meta.Managers
                 );
             var specimenFactory = new SpecimenWithAgeFactory(data, specimenInitializator);
 
-            return new AgingHybridManager(mutator
+            var manager = new AgingHybridManager(mutator
                 , crossover
                 , selector
                 , specimenFactory
@@ -88,6 +88,10 @@ namespace Meta.Managers
                 , logger
                 , additionalOperations
                 );
+
+            manager.Init();
+
+            return manager;
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Meta.DataTTP
             this.EvaluationValue = null;
         }
 
-        private HashSet<Item> Items { get; set; }
+        protected HashSet<Item> Items { get; set; }
 
         public List<Node> Nodes { get; set; }
 

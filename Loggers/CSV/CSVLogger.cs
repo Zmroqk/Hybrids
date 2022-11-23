@@ -15,6 +15,7 @@ namespace Loggers.CSV
         public string FilePath { get; set; }
         public Task LoggerThread => this.loggerThread;
         public Queue<Task> LoggerTasks { get; }
+        public object loggerLock;
 
         private FileStream CsvStream { get; set; }
         private CsvWriter CsvWriter { get; set; }
@@ -25,7 +26,8 @@ namespace Loggers.CSV
         {
             this.FilePath = filePath;
             this.CancellationTokenSource = new CancellationTokenSource();
-            this.LoggerTasks = new Queue<Task>();
+            this.LoggerTasks = new Queue<Task>(500);
+            this.loggerLock = new object();
         }
 
         public void RunLogger()
@@ -83,7 +85,7 @@ namespace Loggers.CSV
             {
                 LogSpecimens(recordCopy);
             });
-            lock (this.LoggerTasks)
+            lock (loggerLock)
             {
                 this.LoggerTasks.Enqueue(newTask);
             }
